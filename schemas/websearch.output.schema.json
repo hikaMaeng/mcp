@@ -1,0 +1,184 @@
+{
+  "$defs": {
+    "SearchFailure": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "enum": [
+            "INVALID_ARGUMENT",
+            "CODEX_NOT_FOUND",
+            "CODEX_START_FAILED",
+            "CODEX_FAILED",
+            "TIMEOUT",
+            "OUTPUT_TOO_LARGE",
+            "INCOMPLETE_RESPONSE",
+            "SEARCH_NOT_PERFORMED",
+            "INVALID_RESPONSE",
+            "INTERNAL_ERROR"
+          ],
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "SearchFailure",
+      "type": "object"
+    },
+    "SearchResult": {
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "maxLength": 1000,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "url": {
+          "maxLength": 8192,
+          "minLength": 1,
+          "title": "Url",
+          "type": "string"
+        },
+        "snippet": {
+          "maxLength": 4000,
+          "minLength": 1,
+          "title": "Snippet",
+          "type": "string"
+        },
+        "published_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Published At"
+        },
+        "rank": {
+          "maximum": 10,
+          "minimum": 1,
+          "title": "Rank",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "title",
+        "url",
+        "snippet",
+        "published_at",
+        "rank"
+      ],
+      "title": "SearchResult",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "error"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "query": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Query"
+    },
+    "provider": {
+      "const": "codex-cli",
+      "title": "Provider",
+      "type": "string"
+    },
+    "model": {
+      "const": "gpt-6-luna",
+      "title": "Model",
+      "type": "string"
+    },
+    "reasoning_effort": {
+      "const": "low",
+      "title": "Reasoning Effort",
+      "type": "string"
+    },
+    "searched_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Searched At"
+    },
+    "search_queries": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Search Queries",
+      "type": "array"
+    },
+    "results": {
+      "items": {
+        "$ref": "#/$defs/SearchResult"
+      },
+      "maxItems": 10,
+      "title": "Results",
+      "type": "array"
+    },
+    "count": {
+      "maximum": 10,
+      "minimum": 0,
+      "title": "Count",
+      "type": "integer"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SearchFailure"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "status",
+    "query",
+    "provider",
+    "model",
+    "reasoning_effort",
+    "searched_at",
+    "search_queries",
+    "results",
+    "count",
+    "error"
+  ],
+  "title": "SearchResponse",
+  "type": "object"
+}

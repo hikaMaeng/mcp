@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling==1.29.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "codexmcp"
+version = "0.1.0"
+description = "Independent stdio MCP servers for web search and filesystem operations"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["mcp==2.2.0", "pydantic==2.13.5", "anyio==4.15.1"]
+
+[project.scripts]
+websearch = "websearch.server:main"
+fileiomcp = "fileiomcp.server:main"
+
+[dependency-groups]
+dev = ["pytest==9.1.1", "jsonschema==4.26.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["live: runs the real authenticated Codex CLI and uses account quota"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/websearch", "src/fileiomcp"]

@@ -1,0 +1,5 @@
+[mcp_servers.websearch]
+command = "uv"
+args = ["run", "--frozen", "--directory", "F:/dev/codexmcp", "websearch"]
+startup_timeout_sec = 30
+tool_timeout_sec = 210

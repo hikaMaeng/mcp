@@ -1,0 +1,62 @@
+{
+  "$defs": {
+    "RawResult": {
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "maxLength": 1000,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "url": {
+          "maxLength": 8192,
+          "minLength": 1,
+          "title": "Url",
+          "type": "string"
+        },
+        "snippet": {
+          "maxLength": 4000,
+          "minLength": 1,
+          "title": "Snippet",
+          "type": "string"
+        },
+        "published_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Published At"
+        }
+      },
+      "required": [
+        "title",
+        "url",
+        "snippet",
+        "published_at"
+      ],
+      "title": "RawResult",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "results": {
+      "items": {
+        "$ref": "#/$defs/RawResult"
+      },
+      "maxItems": 10,
+      "title": "Results",
+      "type": "array"
+    }
+  },
+  "required": [
+    "results"
+  ],
+  "title": "RawResponse",
+  "type": "object"
+}

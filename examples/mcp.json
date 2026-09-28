@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "websearch": {
+      "command": "uv",
+      "args": ["run", "--frozen", "--directory", "F:/dev/codexmcp", "websearch"]
+    }
+  }
+}

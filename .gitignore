@@ -1,0 +1,33 @@
+# Local Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.uv-cache/
+
+# Build output and verification artifacts
+*.egg-info/
+build/
+dist/
+artifacts/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.log
+*.tmp
+
+# Private local configuration; sanitized examples may be tracked
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Editor and OS state
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
