@@ -32,8 +32,8 @@ TOOL_DEFINITIONS = [
     ("directory_delete", "Delete an empty directory, or recursively delete it when recursive=true.", {"path": STRING, "recursive": BOOL}, ["path"]),
     ("directory_move", "Move a directory to the exact destination path. Existing destinations require overwrite=true.", {"source": STRING, "destination": STRING, "overwrite": BOOL}, ["source", "destination"]),
     ("directory_copy", "Copy a directory tree to the exact destination path. Existing destinations require overwrite=true.", {"source": STRING, "destination": STRING, "overwrite": BOOL}, ["source", "destination"]),
-    ("file_create", "Create or replace a UTF-8 text file. Replacement requires overwrite=true. For long content, create an empty file then use several smaller, consecutive file_append calls.", {"path": STRING, "content": TEXT_CHUNK, "create_parents": BOOL, "overwrite": BOOL, "encoding": STRING}, ["path"]),
-    ("file_append", "Append a text chunk to an existing file. For long content, use several smaller consecutive calls to keep each generated tool call valid.", {"path": STRING, "content": TEXT_CHUNK, "encoding": STRING}, ["path", "content"]),
+    ("file_create", "Create an empty file by omitting content, then write documents/code with consecutive file_append calls. Keep any inline content short (prefer at most 800 characters). Do not generate several complete files in one response. Wait for each tool result before the next call. Replacement requires overwrite=true; inspect existing files with file_read first.", {"path": STRING, "content": TEXT_CHUNK, "create_parents": BOOL, "overwrite": BOOL, "encoding": STRING}, ["path"]),
+    ("file_append", "Append one small text chunk to an existing file (prefer at most 800 characters per call). Wait for success before appending the next chunk. Each append is committed immediately: if a call fails or disconnects, read the file before retrying to avoid duplicate text. Continue until the entire document is written.", {"path": STRING, "content": TEXT_CHUNK, "encoding": STRING}, ["path", "content"]),
     ("file_delete", "Delete a file.", {"path": STRING}, ["path"]),
     ("file_move", "Move a file to the exact destination path. Existing destinations require overwrite=true.", {"source": STRING, "destination": STRING, "overwrite": BOOL}, ["source", "destination"]),
     ("file_copy", "Copy a file to the exact destination path. Existing destinations require overwrite=true.", {"source": STRING, "destination": STRING, "overwrite": BOOL}, ["source", "destination"]),
@@ -105,7 +105,11 @@ def create_server() -> Server:
         instructions=(
             "These tools operate on local files. Existing files are protected: use file_read "
             "to inspect them and overwrite=true only when replacing them is intended. "
-            "Long documents may be written with file_create then file_append. "
+            "For documents and code, create an empty file by omitting content, then append "
+            "small chunks (prefer at most 800 characters) sequentially with file_append. "
+            "Generate one tool call at a time and wait for its result; do not emit multiple "
+            "complete files in a single model response. After a disconnect, inspect file_read "
+            "before retrying any append because an earlier write might already be committed. "
             "The client must allow enough output tokens to finish every JSON tool argument; "
             "the server cannot receive or repair a truncated tool call."
         ),

@@ -2,7 +2,11 @@
   "mcpServers": {
     "websearch": {
       "command": "uv",
-      "args": ["run", "--frozen", "--directory", "F:/dev/codexmcp", "websearch"]
+      "args": ["run", "--frozen", "--directory", "/absolute/path/to/mcp", "websearch"]
+    },
+    "fileiomcp": {
+      "command": "uv",
+      "args": ["run", "--frozen", "--directory", "/absolute/path/to/mcp", "fileiomcp"]
     }
   }
 }

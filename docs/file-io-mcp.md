@@ -27,7 +27,7 @@ Move/copy operations reject an existing destination unless `overwrite=true`. `fi
 
 Writes through symbolic links are rejected. Exclusive file publication requires filesystem hard-link support (available on NTFS).
 
-Text content has no server length limit. `file_append` allows incremental writing, but each successful chunk is already committed. The MCP client must permit enough output tokens to complete its JSON arguments; truncated JSON is rejected by the client before this server receives it.
+Text content has no server length limit. For documents/code, omit `content` from `file_create`, then call `file_append` sequentially with small chunks (prefer at most 800 characters). Generate one call per response and wait for its result. This is model guidance, not a schema length constraint. Each successful append is already committed. After a connection failure, inspect the actual file before retrying to avoid duplicate chunks. The MCP client must permit enough output tokens to complete its JSON arguments; truncated JSON is rejected by the client before this server receives it. A larger output limit can still truncate a response containing several large file calls.
 
 Line edits use 1-based inclusive ranges. Each `lines` item is a logical line without CR or LF; deletion requires no `lines`, replacement requires at least one line. Untouched lines preserve their original newline bytes, including mixed LF/CRLF. Inserted lines use the first detected newline convention. A replaced block retains a terminating newline when another line follows or the original file ended with a newline.
 
