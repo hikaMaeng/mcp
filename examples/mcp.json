@@ -7,6 +7,10 @@
     "fileiomcp": {
       "command": "uv",
       "args": ["run", "--frozen", "--directory", "/absolute/path/to/mcp", "fileiomcp"]
+    },
+    "terminalmcp": {
+      "command": "uv",
+      "args": ["run", "--frozen", "--directory", "/absolute/path/to/mcp", "terminalmcp"]
     }
   }
 }

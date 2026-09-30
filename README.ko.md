@@ -1,15 +1,16 @@
-Codex CLI 웹검색과 파일시스템 작업을 제공하는 독립 로컬 stdio MCP 서버 두 개입니다.
+Codex CLI 웹검색, 파일시스템 작업, 요청마다 새 프로세스로 실행되는 터미널 도구를 제공하는 독립 로컬 stdio MCP 서버 세 개입니다.
 
-# Web Search & Filesystem MCP
+# Web Search, Filesystem & Terminal MCP
 
 [English](README.md) | [한국어](README.ko.md)
 
-필요한 서버만 등록하거나 두 서버를 각각 별도의 프로세스로 연결할 수 있습니다.
+필요한 서버를 각각 별도의 프로세스로 연결할 수 있습니다.
 
 | 서버 | 제공 기능 | Codex CLI 로그인 |
 | --- | --- | --- |
 | `websearch` | 출처 URL과 구조화된 요약을 포함하는 실시간 웹검색 | 필요 |
 | `fileiomcp` | 파일·폴더 생성, 읽기, 수정, 삭제, 이동, 복사 | 불필요 |
+| `terminalmcp` | 요청마다 새 프로세스로 실행하는 단일 터미널 명령 | 불필요 |
 
 ## 사전 준비
 
@@ -19,7 +20,7 @@ Codex CLI 웹검색과 파일시스템 작업을 제공하는 독립 로컬 stdi
 
 웹검색은 로컬 CLI의 인증 정보와 계정 사용량을 사용합니다. 서버가 대화형 로그인을 수행하거나 도구 인자로 인증 정보를 받지는 않습니다. 계정에서 `gpt-6-luna`와 실시간 웹검색을 사용할 수 있어야 합니다. 구현의 모델은 **`gpt-6-luna`**, 추론 강도는 **`low`**로 고정됩니다.
 
-파일시스템 서버에는 Codex CLI나 OpenAI 계정이 필요하지 않습니다.
+파일시스템과 터미널 서버에는 Codex CLI나 OpenAI 계정이 필요하지 않습니다.
 
 ## 빠른 시작
 
@@ -62,12 +63,16 @@ codex login status
     "fileiomcp": {
       "command": "C:/path/to/mcp/.venv/Scripts/python.exe",
       "args": ["-m", "fileiomcp"]
+    },
+    "terminalmcp": {
+      "command": "C:/path/to/mcp/.venv/Scripts/python.exe",
+      "args": ["-m", "terminalmcp"]
     }
   }
 }
 ```
 
-macOS/Linux에서는 두 `command`를 `/absolute/path/to/mcp/.venv/bin/python`으로 바꾸고 `args`는 유지하세요. Windows JSON 경로는 `/`를 사용하거나 역슬래시를 `\\`로 이스케이프해야 합니다.
+macOS/Linux에서는 각 `command`를 `/absolute/path/to/mcp/.venv/bin/python`으로 바꾸고 `args`는 유지하세요. Windows JSON 경로는 `/`를 사용하거나 역슬래시를 `\\`로 이스케이프해야 합니다.
 
 `uv`를 통해 실행하는 설정도 가능합니다.
 
@@ -81,6 +86,10 @@ macOS/Linux에서는 두 `command`를 `/absolute/path/to/mcp/.venv/bin/python`�
     "fileiomcp": {
       "command": "uv",
       "args": ["run", "--frozen", "--directory", "/absolute/path/to/mcp", "fileiomcp"]
+    },
+    "terminalmcp": {
+      "command": "uv",
+      "args": ["run", "--frozen", "--directory", "/absolute/path/to/mcp", "terminalmcp"]
     }
   }
 }
@@ -102,7 +111,7 @@ MCP 설정 편집기를 열어 위 항목을 추가하세요. 이 Windows 설치
 
 표준 Windows npm 설치의 `codex.cmd`도 지원합니다. 인접한 공식 `node_modules/@openai/codex/bin/codex.js`와 Node.js가 있어야 하며 임의 `.cmd` 래퍼는 지원하지 않습니다.
 
-두 서버의 stdout은 MCP 통신 전용입니다. `uv run --frozen websearch` 또는 `uv run --frozen fileiomcp`를 직접 실행하면 stdin으로 클라이언트를 기다립니다. 대화형 명령 프롬프트나 HTTP 서비스가 아닙니다.
+세 서버의 stdout은 MCP 통신 전용입니다. `uv run --frozen websearch`, `uv run --frozen fileiomcp`, `uv run --frozen terminalmcp`를 직접 실행하면 stdin으로 클라이언트를 기다립니다. 대화형 명령 프롬프트나 HTTP 서비스가 아닙니다.
 
 ## 도구
 
@@ -138,6 +147,10 @@ MCP 설정 편집기를 열어 위 항목을 추가하세요. 이 Windows 설치
 기존 대상 교체에는 `overwrite: true`가 필요합니다. 내용이 같은 `file_create` 재시도는 허용합니다. 교체 전에 기존 파일을 읽으세요. 문서·코드는 `content`를 생략해 빈 파일을 만든 뒤 `file_append`로 한 번에 약 800자 이하씩 순서대로 작성하세요. 응답당 호출 하나를 생성하고 결과를 받은 뒤 다음 호출을 진행합니다. 이는 지침이며 스키마 길이 제한은 아닙니다. 연결 실패 시 이전 청크가 이미 기록됐을 수 있으므로 실제 파일을 읽고 재시도해야 합니다.
 
 **접근 범위는 OS 권한을 따르며 별도의 허용 폴더 샌드박스 설정은 없습니다.** 절대 경로를 사용하세요. 재귀 삭제는 선택한 트리를 영구 삭제합니다. 심볼릭 링크를 통한 쓰기는 거부되며, 배타적 생성에는 NTFS 같은 하드링크 지원이 필요합니다. 상세 동작은 [File I/O MCP](docs/file-io-mcp.md)를 참고하세요.
+
+### 터미널
+
+`terminalmcp`는 `terminal_run` 도구를 제공합니다. 예: `{"command":"Get-Process | Select-Object -First 5","timeout_seconds":30,"max_output_bytes":200000}`. 각 호출은 Windows의 PowerShell, macOS/Linux의 `/bin/sh` 새 프로세스에서 실행됩니다. Windows에서는 `Get-Process` 같은 PowerShell 명령을 사용하세요. `cat /proc/meminfo` 같은 Linux 명령은 사용할 수 없습니다. PowerShell 출력 인코딩은 UTF-8로 설정하고, 캡처된 출력은 필요하면 Windows OEM/ANSI 코드페이지로 디코딩합니다. 세션 상태는 호출 사이에 유지되지 않습니다. 실행 중 클라이언트가 progress token을 제공하면 최근 출력과 상태를 MCP progress 알림으로 주기적으로 보냅니다. 클라이언트에 따라 이 알림이 화면에 표시되지 않을 수 있습니다. MCP 취소 요청은 실행 중인 프로세스 트리를 종료합니다. `cwd`는 선택적 작업 디렉터리입니다. 제한 시간은 1~600초이며 stdout과 stderr는 각각 기본 200,000바이트, 최대 1,000,000바이트까지 반환합니다. 명령은 MCP 서버 OS 사용자의 권한으로 실행됩니다.
 
 ## 웹검색 환경변수
 

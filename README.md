@@ -1,15 +1,16 @@
-Two independent local stdio MCP servers: web search through Codex CLI and filesystem operations.
+Three independent local stdio MCP servers: web search through Codex CLI, filesystem operations, and one-shot terminal commands in a fresh process per request.
 
-# Web Search & Filesystem MCP
+# Web Search, Filesystem & Terminal MCP
 
 [English](README.md) | [한국어](README.ko.md)
 
-Connect either server, or register both as separate processes.
+Connect the servers you need as separate processes.
 
 | Server | Tools | Codex CLI login |
 | --- | --- | --- |
 | `websearch` | Live web search with source URLs and structured summaries | Required |
 | `fileiomcp` | Create, read, edit, delete, move, and copy files and directories | Not required |
+| `terminalmcp` | Run a one-shot shell command in a fresh process per request | Not required |
 
 ## Prerequisites
 
@@ -19,7 +20,7 @@ Connect either server, or register both as separate processes.
 
 Web search uses the local CLI credentials and your account quota. The server does not perform interactive login or accept credentials as tool arguments. Your account must have access to `gpt-6-luna` and live web search. The implementation fixes the model to **`gpt-6-luna`** and reasoning effort to **`low`**.
 
-The filesystem server requires neither Codex CLI nor an OpenAI account.
+The filesystem and terminal servers require neither Codex CLI nor an OpenAI account.
 
 ## Quick start
 
@@ -62,12 +63,16 @@ Replace `C:/path/to/mcp` with the **absolute checkout path**. This Windows examp
     "fileiomcp": {
       "command": "C:/path/to/mcp/.venv/Scripts/python.exe",
       "args": ["-m", "fileiomcp"]
+    },
+    "terminalmcp": {
+      "command": "C:/path/to/mcp/.venv/Scripts/python.exe",
+      "args": ["-m", "terminalmcp"]
     }
   }
 }
 ```
 
-On macOS/Linux, use `/absolute/path/to/mcp/.venv/bin/python` for both commands. The `args` stay the same. In Windows JSON, use forward slashes or escape backslashes as `\\`.
+On macOS/Linux, use `/absolute/path/to/mcp/.venv/bin/python` for each command. The `args` stay the same. In Windows JSON, use forward slashes or escape backslashes as `\\`.
 
 Alternatively, launch through `uv`:
 
@@ -81,6 +86,10 @@ Alternatively, launch through `uv`:
     "fileiomcp": {
       "command": "uv",
       "args": ["run", "--frozen", "--directory", "/absolute/path/to/mcp", "fileiomcp"]
+    },
+    "terminalmcp": {
+      "command": "uv",
+      "args": ["run", "--frozen", "--directory", "/absolute/path/to/mcp", "terminalmcp"]
     }
   }
 }
@@ -102,7 +111,7 @@ If Codex works in a terminal but is not found by the GUI, add this `env` object 
 
 A standard Windows npm `codex.cmd` is also supported when its adjacent official `node_modules/@openai/codex/bin/codex.js` and Node.js are available. Arbitrary `.cmd` wrappers are not supported.
 
-Both servers reserve stdout for MCP messages. Running `uv run --frozen websearch` or `uv run --frozen fileiomcp` manually waits for a client over stdin; these are not interactive command prompts or HTTP services.
+All three servers reserve stdout for MCP messages. Running `uv run --frozen websearch`, `uv run --frozen fileiomcp`, or `uv run --frozen terminalmcp` manually waits for a client over stdin; these are not interactive command prompts or HTTP services.
 
 ## Tools
 
@@ -138,6 +147,10 @@ Use `operation: "delete"` without `lines` to delete a range. Use `operation: "in
 Existing destinations require `overwrite: true`; an identical `file_create` retry is accepted. Inspect existing files before replacing them. For documents/code, create an empty file by omitting `content`, then send consecutive `file_append` chunks (prefer at most 800 characters each). Generate one call per response and wait for its result. This is guidance, not a schema length limit. If a connection fails, read the actual file before retrying an append: the previous chunk may already have been written.
 
 **Filesystem access follows OS permissions; there is no configured allowed-directory sandbox.** Use absolute paths. Recursive deletion permanently removes the selected tree. Writes through symbolic links are rejected; exclusive creation requires hard-link support, such as NTFS. See [File I/O MCP](docs/file-io-mcp.md) for write and failure semantics.
+
+### Terminal
+
+`terminalmcp` exposes `terminal_run`. Example: `{"command":"Get-Process | Select-Object -First 5","timeout_seconds":30,"max_output_bytes":200000}`. Each call starts fresh Windows PowerShell on Windows or `/bin/sh` on macOS/Linux. On Windows, use PowerShell commands such as `Get-Process`; Linux commands such as `cat /proc/meminfo` are unavailable. Windows PowerShell output is configured as UTF-8, with OEM/ANSI code-page fallback when decoding captured output. Working-directory changes and shell state do not persist between calls. Optional `cwd` selects an existing working directory. While running, it sends periodic MCP progress notifications with recent output when the client supplies a progress token; clients may choose not to display them. MCP cancellation stops the process tree. Timeout is 1–600 seconds; stdout and stderr are each capped at 1,000,000 bytes (defaults: 30 seconds and 200,000 bytes per stream). Commands run with the MCP server user's OS permissions.
 
 ## Web search configuration
 
